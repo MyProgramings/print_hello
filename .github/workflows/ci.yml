@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ '**' ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t print_hello:latest .
+
+      - name: Run container
+        run: |
+          docker run -d --name print_hello -p 8080:80 print_hello:latest
+          # wait for apache to start (timeout after ~30s)
+          for i in {1..30}; do
+            if curl -sSf http://localhost:8080/ >/dev/null 2>&1; then
+              echo "Service is up"
+              break
+            fi
+            echo "Waiting for service... ($i)"
+            sleep 1
+          done
+
+      - name: Test HTTP response contains Hello World
+        run: |
+          curl -sSf http://localhost:8080/ | grep -q "Hello World"
+
+      - name: Stop container
+        if: always()
+        run: |
+          docker stop print_hello || true
+          docker rm print_hello || true
