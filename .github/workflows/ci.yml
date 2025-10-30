@@ -3,7 +3,7 @@ name: CI/CD - PHP Hello World Docker
 on:
   push:
     branches: [ '**' ]
-    tags:    # ننفّذ أيضاً عند دفع Tags
+    tags:
       - 'v*'
 
 jobs:
